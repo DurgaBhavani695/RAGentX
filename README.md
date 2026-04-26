@@ -110,7 +110,7 @@ uv run streamlit run frontend/app.py
 ### 1. Document Management and Ingestion
 Upload and manage your PDF, TXT, and Markdown files with ease. The system automatically chunks and indexes them for retrieval.
 
-![Document Management](assets/screenshot2.jpeg)
+![Document Management](assets/screenshot3.jpeg)
 
 ### 2. Multi-Agent RAG Chat Interface
 Ask questions about your documents. The agentic loop retrieves context, evaluates relevance, and generates precise answers with source attribution.
@@ -120,7 +120,7 @@ Ask questions about your documents. The agentic loop retrieves context, evaluate
 ### 3. Agentic Debug Trace
 Peek under the hood to see exactly how the agent rewrote your query, evaluated context, and formulated the final answer.
 
-![Debug Trace](assets/screenshot3.jpeg)
+![Debug Trace](assets/screenshot2.jpeg)
 
 ---
 
