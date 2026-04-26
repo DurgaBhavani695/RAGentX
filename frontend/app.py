@@ -10,7 +10,7 @@ st.title("🤖 RAGentX: Agentic RAG System")
 st.markdown("---")
 
 # API Configuration
-API_URL = "http://127.0.0.1:8000"
+API_URL = "http://localhost:8000"
 
 # Create a session that doesn't use system proxies (to avoid WinError 10061 on some systems)
 http = requests.Session()
