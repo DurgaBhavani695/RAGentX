@@ -95,13 +95,32 @@ If you prefer to run the services separately for development, use two terminals:
 
 **Terminal 1: Backend (FastAPI)**
 ```bash
-uv run python -m uvicorn app.main:app --reload
+uv run python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 **Terminal 2: Frontend (Streamlit)**
 ```bash
 uv run streamlit run frontend/app.py
 ```
+
+---
+
+## 📸 Screenshots
+
+### 1. Document Management and Ingestion
+Upload and manage your PDF, TXT, and Markdown files with ease. The system automatically chunks and indexes them for retrieval.
+
+![Document Management](assets/screenshot2.jpeg)
+
+### 2. Multi-Agent RAG Chat Interface
+Ask questions about your documents. The agentic loop retrieves context, evaluates relevance, and generates precise answers with source attribution.
+
+![RAG Chat Interface](assets/screenshot1.jpeg)
+
+### 3. Agentic Debug Trace
+Peek under the hood to see exactly how the agent rewrote your query, evaluated context, and formulated the final answer.
+
+![Debug Trace](assets/screenshot3.jpeg)
 
 ---
 
