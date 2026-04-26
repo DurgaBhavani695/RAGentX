@@ -30,9 +30,9 @@ def test_retry_loop_logic():
     """
     Test that the graph loops back to rewrite when docs are irrelevant.
     """
-    with patch("app.agents.nodes.rewriter.ChatOpenAI") as mock_llm_rewriter, \
+    with patch("app.agents.nodes.rewriter.get_llm") as mock_llm_rewriter, \
          patch("app.agents.nodes.retriever.get_vectorstore") as mock_vs, \
-         patch("app.agents.nodes.retriever.OpenAIEmbeddings"), \
+         patch("app.agents.nodes.retriever.get_embeddings"), \
          patch("app.agents.nodes.generator.generate_answer") as mock_gen, \
          patch("app.agents.nodes.validator.validate_generation") as mock_val:
         
@@ -90,9 +90,9 @@ def test_debug_info_content():
         "debug_info": {}
     }
     
-    with patch("app.agents.nodes.rewriter.ChatOpenAI") as mock_llm, \
+    with patch("app.agents.nodes.rewriter.get_llm") as mock_llm, \
          patch("app.agents.nodes.retriever.get_vectorstore") as mock_vs, \
-         patch("app.agents.nodes.retriever.OpenAIEmbeddings"), \
+         patch("app.agents.nodes.retriever.get_embeddings"), \
          patch("app.agents.nodes.generator.generate_answer") as mock_gen, \
          patch("app.agents.nodes.validator.validate_generation") as mock_val:
         
@@ -115,5 +115,5 @@ def test_debug_info_content():
         debug_info = final_state.get("debug_info", {})
         assert "rewriter" in debug_info
         assert "retrieved_docs_count" in debug_info
-        assert "generator" in debug_info
+        assert "generator_status" in debug_info
         assert "validator_status" in debug_info

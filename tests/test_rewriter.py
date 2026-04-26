@@ -24,7 +24,7 @@ def test_rewrite_query_success():
     mock_llm = MagicMock(spec=ChatOpenAI)
     mock_llm.invoke.return_value = AIMessage(content="What is the weather in London?")
 
-    with patch("app.agents.nodes.rewriter.ChatOpenAI", return_value=mock_llm):
+    with patch("app.agents.nodes.rewriter.get_llm", return_value=mock_llm):
         result = rewrite_query(state)
 
     assert result["rewritten_query"] == "What is the weather in London?"
@@ -47,7 +47,7 @@ def test_rewrite_query_no_history():
     mock_llm = MagicMock(spec=ChatOpenAI)
     mock_llm.invoke.return_value = AIMessage(content="Hello")
 
-    with patch("app.agents.nodes.rewriter.ChatOpenAI", return_value=mock_llm):
+    with patch("app.agents.nodes.rewriter.get_llm", return_value=mock_llm):
         result = rewrite_query(state)
 
     assert result["rewritten_query"] == "Hello"

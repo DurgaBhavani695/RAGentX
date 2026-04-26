@@ -17,7 +17,7 @@ def test_ingest_text(mock_db):
     
     with patch("app.api.endpoints.ingest.get_vectorstore", return_value=mock_vs_instance):
         with patch("app.api.endpoints.ingest.save_vectorstore"):
-            with patch("app.api.endpoints.ingest.OpenAIEmbeddings"):
+            with patch("app.api.endpoints.ingest.get_embeddings"):
                 # Use dependency overrides
                 app.dependency_overrides[get_db] = lambda: mock_db
                 

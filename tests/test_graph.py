@@ -1,5 +1,9 @@
 import pytest
 from app.agents.state import AgentState
+from unittest.mock import patch, MagicMock
+import importlib
+import app.agents.graph
+from langgraph.graph import END
 
 def test_graph_structure():
     """
@@ -30,14 +34,14 @@ def test_decide_to_generate():
     
     # Case 2: Not relevant, retry_count < 3
     state_retry: AgentState = {
-        "debug_info": {"evaluator_relevance": "not_relevant"},
+        "debug_info": {"evaluator_relevance": "irrelevant"},
         "retry_count": 0
     }
     assert decide_to_generate(state_retry) == "rewrite"
     
     # Case 3: Not relevant, retry_count >= 3
     state_max_retries: AgentState = {
-        "debug_info": {"evaluator_relevance": "not_relevant"},
+        "debug_info": {"evaluator_relevance": "irrelevant"},
         "retry_count": 3
     }
     assert decide_to_generate(state_max_retries) == "generate"
@@ -51,7 +55,6 @@ def test_decide_to_finish():
     state_valid: AgentState = {
         "debug_info": {"validator_status": "valid"}
     }
-    from langgraph.graph import END
     assert decide_to_finish(state_valid) == END
     
     # Case 2: Invalid generation
@@ -60,69 +63,94 @@ def test_decide_to_finish():
     }
     assert decide_to_finish(state_invalid) == "generate"
 
-from unittest.mock import patch, MagicMock
-
 def test_graph_flow_mocked():
     """
     Tests the full graph flow with mocked nodes.
     """
-    # Patch before importing graph so the graph gets the mocks
+    # Patch all nodes to avoid LLM calls and ensure deterministic behavior
     with patch("app.agents.nodes.rewriter.rewrite_query") as mock_rewrite, \
-         patch("app.agents.nodes.retriever.retrieve_docs") as mock_retrieve:
+         patch("app.agents.nodes.retriever.retrieve_docs") as mock_retrieve, \
+         patch("app.agents.nodes.evaluator.evaluate_docs") as mock_evaluate, \
+         patch("app.agents.nodes.generator.generate_answer") as mock_generate, \
+         patch("app.agents.nodes.validator.validate_generation") as mock_validate:
         
+        # Reload graph to pick up mocked nodes
+        importlib.reload(app.agents.graph)
         from app.agents.graph import graph
         
         # Setup mocks
         mock_rewrite.side_effect = lambda state: {"rewritten_query": "rewritten", "debug_info": {**state.get("debug_info", {}), "rewriter": "done"}}
         mock_retrieve.side_effect = lambda state: {"retrieved_docs": [], "debug_info": {**state.get("debug_info", {}), "retriever": "done"}}
+        mock_evaluate.side_effect = lambda state: {"debug_info": {**state.get("debug_info", {}), "evaluator_relevance": "relevant"}}
+        mock_generate.side_effect = lambda state: {"generation": "mocked answer", "debug_info": {**state.get("debug_info", {}), "generator_status": "completed"}}
+        mock_validate.side_effect = lambda state: {"debug_info": {**state.get("debug_info", {}), "validator_status": "valid"}}
         
-        # Test 1: Straight through to END
         initial_state: AgentState = {
             "query": "test query",
             "chat_history": [],
             "retry_count": 0,
-            "debug_info": {
-                "evaluator_relevance": "relevant",
-                "validator_status": "valid"
-            }
+            "debug_info": {}
         }
         
         result = graph.invoke(initial_state)
         
         assert "generation" in result
-        assert result["debug_info"]["evaluator"] == "evaluated as relevant"
-        assert result["debug_info"]["validator"] == "validated as valid"
+        assert result["debug_info"]["evaluator_relevance"] == "relevant"
+        assert result["debug_info"]["validator_status"] == "valid"
         assert mock_rewrite.call_count == 1
         assert mock_retrieve.call_count == 1
+        assert mock_evaluate.call_count == 1
+        assert mock_generate.call_count == 1
+        assert mock_validate.call_count == 1
 
 def test_graph_retry_flow_mocked():
     """
     Tests the retry flow in the graph.
     """
-    # Note: We need a fresh graph or at least fresh mocks
-    # Since graph is already imported in the previous test, we might need to reload it or patch differently.
-    # But let's see if this works first.
-    
     with patch("app.agents.nodes.rewriter.rewrite_query") as mock_rewrite, \
-         patch("app.agents.nodes.retriever.retrieve_docs") as mock_retrieve:
+         patch("app.agents.nodes.retriever.retrieve_docs") as mock_retrieve, \
+         patch("app.agents.nodes.evaluator.evaluate_docs") as mock_evaluate, \
+         patch("app.agents.nodes.generator.generate_answer") as mock_generate, \
+         patch("app.agents.nodes.validator.validate_generation") as mock_validate:
         
+        # Reload graph to pick up mocked nodes
+        importlib.reload(app.agents.graph)
         from app.agents.graph import graph
         
         # Setup mocks
         mock_rewrite.side_effect = lambda state: {"rewritten_query": f"rewritten {state.get('retry_count', 0)}", "debug_info": {**state.get("debug_info", {}), "rewriter": "done"}}
         mock_retrieve.side_effect = lambda state: {"retrieved_docs": [], "debug_info": {**state.get("debug_info", {}), "retriever": "done"}}
         
+        # Mock evaluate to increment retry count and stay irrelevant for 3 times
+        def mock_evaluate_side_effect(state):
+            count = state.get("retry_count", 0)
+            if count < 3:
+                return {
+                    "debug_info": {**state.get("debug_info", {}), "evaluator_relevance": "irrelevant"},
+                    "retry_count": count + 1
+                }
+            else:
+                return {
+                    "debug_info": {**state.get("debug_info", {}), "evaluator_relevance": "relevant"},
+                    "retry_count": count
+                }
+        mock_evaluate.side_effect = mock_evaluate_side_effect
+        
+        mock_generate.side_effect = lambda state: {"generation": "mocked answer", "debug_info": {**state.get("debug_info", {}), "generator_status": "completed"}}
+        mock_validate.side_effect = lambda state: {"debug_info": {**state.get("debug_info", {}), "validator_status": "valid"}}
+
         initial_state: AgentState = {
             "query": "test query",
             "chat_history": [],
             "retry_count": 0,
-            "debug_info": {
-                "evaluator_relevance": "not_relevant",
-                "validator_status": "valid"
-            }
+            "debug_info": {}
         }
         
         result = graph.invoke(initial_state)
         
-        assert result["retry_count"] >= 3
-        assert mock_rewrite.call_count >= 3
+        # It should have retried 2 times (total 3 attempts), then moved to generate on the 3rd evaluate call (retry_count=3)
+        assert result["retry_count"] == 3
+        assert mock_rewrite.call_count == 3 # Initial call + 2 retries
+        assert mock_retrieve.call_count == 3
+        assert mock_evaluate.call_count == 3
+        assert mock_generate.call_count == 1

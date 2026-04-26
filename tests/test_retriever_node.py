@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 
 @patch("app.agents.nodes.retriever.get_vectorstore")
 @patch("app.agents.nodes.retriever.create_hybrid_retriever")
-@patch("app.agents.nodes.retriever.OpenAIEmbeddings")
+@patch("app.agents.nodes.retriever.get_embeddings")
 def test_retrieve_docs(mock_embeddings, mock_create_retriever, mock_get_vectorstore):
     # Mocking
     mock_vs = MagicMock()
