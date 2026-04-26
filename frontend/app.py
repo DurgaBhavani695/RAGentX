@@ -113,7 +113,8 @@ with tab_docs:
 
     with col_file:
         st.subheader("File Upload")
-        uploaded_files = st.file_uploader("Upload files (PDF, TXT, MD)", accept_multiple_files=True)
+        st.markdown("*Supported formats: PDF, TXT, MD*")
+        uploaded_files = st.file_uploader("Upload files", accept_multiple_files=True, type=["pdf", "txt", "md"])
         
         if st.button("Upload to RAGentX"):
             if uploaded_files:
