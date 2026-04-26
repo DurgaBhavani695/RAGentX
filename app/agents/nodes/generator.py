@@ -1,14 +1,38 @@
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
+from app.core.config import settings
 
 def generate_answer(state: AgentState):
     """
     Generates an answer based on the retrieved documents and query.
     """
+    llm = ChatOpenAI(
+        base_url="https://api.groq.com/openai/v1",
+        api_key=settings.GROQ_API_KEY,
+        model="llama3-8b-8192",
+        temperature=0
+    )
+
     retrieved_docs = state.get("retrieved_docs", [])
+    query = state.get("rewritten_query") or state["query"]
+
+    # Format context
+    context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful AI assistant. Answer the user's question using ONLY the provided context. If the answer is not in the context, say you don't know. \n\nContext:\n{context}"),
+        ("human", "{query}")
+    ])
+
+    chain = prompt | llm
     
-    # Placeholder implementation
-    # In a real system, we'd pass these docs to an LLM
-    response_text = "This is a placeholder answer based on the retrieved documents."
+    response = chain.invoke({
+        "context": context,
+        "query": query
+    })
+
+    response_text = response.content
     
     if retrieved_docs:
         response_text += "\n\nSources:"
@@ -18,7 +42,7 @@ def generate_answer(state: AgentState):
             response_text += f"\n- {source} (Page {page})"
     
     debug_info = state.get("debug_info", {}).copy()
-    debug_info["generator"] = "generated"
+    debug_info["generator_status"] = "completed"
     debug_info["retrieved_docs_count"] = len(retrieved_docs)
     
     return {

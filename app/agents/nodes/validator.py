@@ -1,15 +1,44 @@
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
+from app.core.config import settings
 
 def validate_generation(state: AgentState):
     """
     Validates the generated answer (e.g., for hallucinations or safety).
     """
-    # Placeholder implementation
-    debug_info = state.get("debug_info", {}).copy()
+    llm = ChatOpenAI(
+        base_url="https://api.groq.com/openai/v1",
+        api_key=settings.GROQ_API_KEY,
+        model="llama3-8b-8192",
+        temperature=0
+    )
+
+    query = state.get("rewritten_query") or state["query"]
+    generation = state.get("generation", "")
+    retrieved_docs = state.get("retrieved_docs", [])
+    context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a validator. Check if the AI's answer is supported by the context and doesn't contain hallucinations. Respond with exactly one word: 'valid' if it is correct, or 'invalid' if it is hallucinated or wrong. \n\nContext:\n{context}"),
+        ("human", "Question: {query}\nAnswer: {generation}")
+    ])
+
+    chain = prompt | llm
     
-    # For testing, we'll use a flag from debug_info, or default to valid
-    status = debug_info.get("validator_status", "valid")
-    debug_info["validator"] = f"validated as {status}"
+    response = chain.invoke({
+        "context": context,
+        "query": query,
+        "generation": generation
+    })
+
+    status = response.content.lower().strip()
+    if "valid" in status and "invalid" not in status:
+        status = "valid"
+    else:
+        status = "invalid"
+
+    debug_info = state.get("debug_info", {}).copy()
     debug_info["validator_status"] = status
     
     return {

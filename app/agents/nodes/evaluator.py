@@ -1,20 +1,47 @@
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
+from app.core.config import settings
 
 def evaluate_docs(state: AgentState):
     """
     Evaluates the relevance of retrieved documents to the query.
     """
-    # Placeholder implementation
-    debug_info = state.get("debug_info", {}).copy()
+    llm = ChatOpenAI(
+        base_url="https://api.groq.com/openai/v1",
+        api_key=settings.GROQ_API_KEY,
+        model="llama3-8b-8192",
+        temperature=0
+    )
+
+    query = state.get("rewritten_query") or state["query"]
+    retrieved_docs = state.get("retrieved_docs", [])
+    context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are an evaluator. Grade the relevance of the retrieved documents to the user's question. Respond with exactly one word: 'relevant' if at least one document is useful, or 'irrelevant' if none are useful. \n\nContext:\n{context}"),
+        ("human", "{query}")
+    ])
+
+    chain = prompt | llm
     
-    # In a real implementation, this would use an LLM to check relevance
-    # For now, we'll use a flag from debug_info for testing, or default to relevant
-    relevance = debug_info.get("evaluator_relevance", "relevant")
-    debug_info["evaluator"] = f"evaluated as {relevance}"
+    response = chain.invoke({
+        "context": context,
+        "query": query
+    })
+
+    relevance = response.content.lower().strip()
+    # Normalize
+    if "relevant" in relevance and "irrelevant" not in relevance:
+        relevance = "relevant"
+    else:
+        relevance = "irrelevant"
+
+    debug_info = state.get("debug_info", {}).copy()
     debug_info["evaluator_relevance"] = relevance
     
     retry_count = state.get("retry_count", 0)
-    if relevance != "relevant":
+    if relevance == "irrelevant":
         retry_count += 1
     
     return {

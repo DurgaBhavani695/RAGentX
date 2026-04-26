@@ -6,7 +6,7 @@
 
 **Architecture:** A modular domain-driven architecture. LangGraph orchestrates a multi-agent pipeline (Rewriter, Retriever, Evaluator, Generator, Validator) with persistence via SQLAlchemy and hybrid retrieval using FAISS + BM25.
 
-**Tech Stack:** Python 3.10+, FastAPI, LangChain, LangGraph, FAISS-cpu, Rank_BM25, SQLAlchemy, Pydantic.
+**Tech Stack:** Python 3.10+, FastAPI, LangChain, LangGraph, FAISS-cpu, Rank_BM25, SQLAlchemy (SQLite), Pydantic.
 
 ---
 
