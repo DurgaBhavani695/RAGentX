@@ -22,6 +22,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "session_id" not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
+if "active_download" not in st.session_state:
+    st.session_state.active_download = None
 
 # Sidebar
 with st.sidebar:
@@ -182,18 +184,27 @@ with tab_docs:
                     download_url = f"{API_URL}/ingest/documents/{doc['doc_id']}/download"
                     if c3.button("Download", key=f"dl_{doc['doc_id']}"):
                         try:
-                            dl_res = http.get(download_url)
-                            if dl_res.status_code == 200:
-                                st.download_button(
-                                    label="Confirm Download",
-                                    data=dl_res.content,
-                                    file_name=doc.get('filename') or "document",
-                                    key=f"confirm_dl_{doc['doc_id']}"
-                                )
-                            else:
-                                st.error("Download failed.")
+                            with st.spinner("Fetching file..."):
+                                dl_res = http.get(download_url)
+                                if dl_res.status_code == 200:
+                                    st.session_state.active_download = {
+                                        "doc_id": doc["doc_id"],
+                                        "content": dl_res.content,
+                                        "filename": doc.get("filename") or "document"
+                                    }
+                                else:
+                                    st.error("Download failed.")
                         except Exception as e:
                             st.error(f"Error: {e}")
+
+                    if st.session_state.active_download and st.session_state.active_download["doc_id"] == doc["doc_id"]:
+                        st.download_button(
+                            label="📥 Save File",
+                            data=st.session_state.active_download["content"],
+                            file_name=st.session_state.active_download["filename"],
+                            key=f"save_{doc['doc_id']}",
+                            on_click=lambda: setattr(st.session_state, 'active_download', None)
+                        )
 
                     # Delete button
                     if c4.button("Delete", key=f"del_{doc['doc_id']}"):
