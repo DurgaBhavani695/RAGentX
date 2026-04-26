@@ -10,7 +10,7 @@ st.title("🤖 RAGentX: Agentic RAG System")
 st.markdown("---")
 
 # API Configuration
-API_URL = "http://localhost:8000"
+API_URL = "http://127.0.0.1:8000"
 
 # Session State for Chat History
 if "messages" not in st.session_state:
