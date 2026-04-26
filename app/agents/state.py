@@ -10,3 +10,4 @@ class AgentState(TypedDict):
     generation: str
     retry_count: int
     debug_info: dict
+    use_web_search: bool

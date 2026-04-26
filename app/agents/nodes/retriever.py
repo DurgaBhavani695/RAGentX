@@ -1,10 +1,13 @@
 from app.agents.state import AgentState
 from app.retrieval.hybrid_search import create_hybrid_retriever
 from app.retrieval.vectorstore import get_vectorstore, get_embeddings
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.documents import Document
 
 def retrieve_docs(state: AgentState):
     """
     Retrieves documents using hybrid search based on the rewritten query.
+    Also performs a web search if requested.
     """
     rewritten_query = state.get("rewritten_query") or state["query"]
     
@@ -19,6 +22,16 @@ def retrieve_docs(state: AgentState):
     retriever = create_hybrid_retriever([], vectorstore)
     
     docs = retriever.invoke(rewritten_query)
+    
+    # Web search integration
+    if state.get("use_web_search"):
+        search = DuckDuckGoSearchRun()
+        search_results = search.run(rewritten_query)
+        web_doc = Document(
+            page_content=search_results,
+            metadata={"source": "duckduckgo_search", "query": rewritten_query}
+        )
+        docs.append(web_doc)
     
     debug_info = state.get("debug_info", {}).copy()
     debug_info["retrieved_docs_count"] = len(docs)
