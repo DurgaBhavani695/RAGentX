@@ -31,7 +31,8 @@ def main():
         subprocess.run("uv sync", shell=True, check=True)
 
         # 3. Define commands
-        backend_cmd = "uv run python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+        # Added timeouts and limited to 1 worker to save memory and prevent connection resets during long processing
+        backend_cmd = "uv run python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1 --timeout-keep-alive 300 --timeout-graceful-shutdown 300"
         frontend_cmd = "uv run streamlit run frontend/app.py"
 
         # 4. Start processes
