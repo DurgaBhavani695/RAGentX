@@ -8,7 +8,7 @@ def validate_generation(state: AgentState):
     Validates the generated answer (e.g., for hallucinations or safety).
     """
     llm = ChatOpenAI(
-        base_url="https://api.groq.com",
+        base_url=settings.GROQ_API_BASE,
         api_key=settings.GROQ_API_KEY,
         model=settings.GROQ_MODEL_NAME,
         temperature=0

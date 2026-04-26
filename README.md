@@ -62,6 +62,7 @@ uv sync
 Ensure your `.env` file in the root has the correct keys:
 ```text
 GROQ_API_KEY=your_groq_key
+GROQ_API_BASE=https://api.groq.com
 DATABASE_URL=sqlite:///./ragentx.db
 FAISS_INDEX_PATH=vectorstore/faiss_index
 ```

@@ -8,7 +8,7 @@ def evaluate_docs(state: AgentState):
     Evaluates the relevance of retrieved documents to the query.
     """
     llm = ChatOpenAI(
-        base_url="https://api.groq.com",
+        base_url=settings.GROQ_API_BASE,
         api_key=settings.GROQ_API_KEY,
         model=settings.GROQ_MODEL_NAME,
         temperature=0
