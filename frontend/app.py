@@ -12,6 +12,10 @@ st.markdown("---")
 # API Configuration
 API_URL = "http://127.0.0.1:8000"
 
+# Create a session that doesn't use system proxies (to avoid WinError 10061 on some systems)
+http = requests.Session()
+http.trust_env = False
+
 # Session State for Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -54,7 +58,7 @@ with tab_chat:
                         "query": prompt,
                         "enable_web_search": enable_web_search
                     }
-                    response = requests.post(
+                    response = http.post(
                         f"{API_URL}/chat?debug=true",
                         json=payload
                     )
@@ -93,7 +97,7 @@ with tab_docs:
         if st.button("Ingest Text"):
             if ingest_text:
                 try:
-                    response = requests.post(
+                    response = http.post(
                         f"{API_URL}/ingest",
                         json={"text": ingest_text, "filename": filename_text}
                     )
@@ -116,7 +120,7 @@ with tab_docs:
                 with st.spinner("Uploading files..."):
                     try:
                         files = [("files", (f.name, f.getvalue(), f.type)) for f in uploaded_files]
-                        response = requests.post(
+                        response = http.post(
                             f"{API_URL}/ingest/file",
                             files=files
                         )
@@ -134,7 +138,7 @@ with tab_docs:
     st.subheader("Ingested Documents")
     
     try:
-        docs_response = requests.get(f"{API_URL}/ingest/documents")
+        docs_response = http.get(f"{API_URL}/ingest/documents")
         if docs_response.status_code == 200:
             docs = docs_response.json()
             if not docs:
@@ -168,7 +172,7 @@ with tab_docs:
                             # A better way might be to only fetch on click, but st.download_button needs data upfront.
                             # Let's use a link for simplicity if content is large, or just download it.
                             if st.button("Download", key=f"dl_{doc['doc_id']}"):
-                                dl_res = requests.get(download_url)
+                                dl_res = http.get(download_url)
                                 if dl_res.status_code == 200:
                                     st.download_button(
                                         label="Confirm Download",
@@ -184,7 +188,7 @@ with tab_docs:
                         # Delete button
                         if c4.button("Delete", key=f"del_{doc['doc_id']}"):
                             try:
-                                del_res = requests.delete(f"{API_URL}/ingest/documents/{doc['doc_id']}")
+                                del_res = http.delete(f"{API_URL}/ingest/documents/{doc['doc_id']}")
                                 if del_res.status_code == 200:
                                     st.success(f"Deleted {doc.get('filename')}")
                                     st.rerun()

@@ -31,7 +31,7 @@ def main():
         subprocess.run("uv sync", shell=True, check=True)
 
         # 3. Define commands
-        backend_cmd = "uv run python -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
+        backend_cmd = "uv run python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
         frontend_cmd = "uv run streamlit run frontend/app.py"
 
         # 4. Start processes
