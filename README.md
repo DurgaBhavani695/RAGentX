@@ -1,14 +1,19 @@
 # RAGentX 🤖
-**The Self-Correcting Multi-Agent RAG Orchestrator**
+**Autonomous Self-Correcting Multi-Agent RAG Orchestrator**
 
-RAGentX is a production-grade **Agentic Retrieval-Augmented Generation (RAG)** system designed to bridge the gap between static documents and actionable intelligence. Unlike standard "one-shot" RAG systems, RAGentX uses **Agentic Loops** powered by **LangGraph** to architect, retrieve, evaluate, and self-correct its own reasoning path.
+RAGentX is an enterprise-grade **Agentic Retrieval-Augmented Generation (RAG)** system designed to eliminate the common pitfalls of traditional RAG—such as irrelevant context retrieval and hallucinations. Built with **LangGraph**, it coordinates a team of specialized AI agents that collaboratively retrieve, evaluate, and self-correct their reasoning path in real-time.
+
+---
+
+## 🌟 Project Motivation
+Standard RAG systems often suffer from "one-shot" failures: if the first retrieval is poor, the final answer is incorrect. **RAGentX** solves this by treating RAG as an iterative, agentic process. It introduces a **Reflexion Loop** where the system critiques its own retrieved context and autonomously decides whether to re-search, re-write the query, or proceed to generation.
 
 ---
 
 ## ✨ Key Features
 
 ### 🧠 Intelligent Orchestration (DAG)
-RAGentX uses a stateful **Directed Acyclic Graph (DAG)** to manage the entire retrieval lifecycle.
+RAGentX is governed by a stateful **Directed Acyclic Graph (DAG)** that manages complex state transitions between agent nodes.
 
 ```mermaid
 graph TD
@@ -16,7 +21,7 @@ graph TD
     START((START)) --> Rewriter[Query Rewriter]
 
     %% Main Pipeline
-    subgraph "Agentic Pipeline"
+    subgraph "Autonomous Agentic Pipeline"
         Rewriter --> Retriever[Hybrid Retriever]
         Retriever --> Evaluator[Context Evaluator]
     end
@@ -38,15 +43,15 @@ graph TD
     class Rewriter,Retriever,Evaluator,Generator,Validator agentNode
 ```
 
-- **Agentic Self-Correction**: Implements a recursive "Reflexion" loop. If the agent determines the retrieved data is irrelevant, it autonomously rewrites the query and tries again.
-- **Hybrid Ensemble Retrieval**: Combines **FAISS** (dense vector search) with **BM25** (keyword search) to ensure both semantic breadth and keyword precision.
-- **Free Local Embeddings**: Optimized for performance and cost by using local **HuggingFace** models (`all-MiniLM-L6-v2`) for vectorization.
-- **High-Speed Generation**: Powered by **Groq Llama 3.3**, delivering enterprise-grade reasoning at lightning speeds.
+- **Self-Healing Retrieval**: Implements an autonomous "Test-and-Repair" loop. If the **Evaluator** finds the retrieved documents insufficient, the system re-attempts retrieval with a refined query.
+- **Hybrid Ensemble Search**: Combines **FAISS** (dense vector similarity) with **BM25** (sparse keyword matching) to maximize both semantic recall and term-based precision.
+- **Cost-Optimized Architecture**: Runs **local HuggingFace embeddings** (`all-MiniLM-L6-v2`), removing expensive API dependencies for vectorization.
+- **High-Fidelity Generation**: Leverages **Groq's Llama 3.3-70b-versatile** for near-instant reasoning and response generation.
 
 ### 🛠️ Developer Experience (DX)
-- **Unified Entry Point**: Launch the full stack (FastAPI + Streamlit) with a single command: `uv run python init_and_run.py`.
-- **Transparent Traceability**: Built-in "Debug Mode" allows developers to inspect the agent's internal trace, including rewritten queries and relevance scores.
-- **Robust Persistence**: Uses **SQLAlchemy** to manage session-based chat history and document metadata.
+- **Unified Entry Point**: Launch the complete stack (FastAPI + Streamlit) with a single command: `uv run python init_and_run.py`.
+- **Transparent Traceability**: A built-in "Debug Mode" in the UI allows you to inspect the agent's internal reasoning, rewritten queries, and relevance scores.
+- **Production-Ready Persistence**: Uses **SQLAlchemy** and **SQLite** to manage session-based chat history and document metadata.
 
 ---
 
@@ -54,11 +59,11 @@ graph TD
 
 ### 1. Prerequisites
 - Python 3.10+
-- [uv](https://github.com/astral-sh/uv) (Modern Python package manager)
-- Groq API Key
+- [uv](https://github.com/astral-sh/uv) (Fastest Python package manager)
+- [Groq API Key](https://console.groq.com/keys)
 
 ### 2. Initialization & Setup
-Run the automated setup script:
+Run the automated setup script to sync dependencies and scaffold your environment:
 ```bash
 # Windows
 ./setup.bat
@@ -69,11 +74,13 @@ uv sync
 ```
 
 ### 3. Configuration
-Add your keys to the generated `.env` file:
+Your `.env` file is automatically scaffolded by `setup.bat`. Ensure it contains:
 ```env
-GROQ_API_KEY=your_groq_key_here
+GROQ_API_KEY=your_gsk_key_here
 GROQ_API_BASE=https://api.groq.com/openai/v1
 GROQ_MODEL_NAME=llama-3.3-70b-versatile
+DATABASE_URL=sqlite:///./ragentx.db
+FAISS_INDEX_PATH=vectorstore/faiss_index
 ```
 
 ### 4. Run Everything
@@ -86,22 +93,24 @@ uv run python init_and_run.py
 ## 📂 Project Structure
 ```text
 app/
-├── api/             # FastAPI REST endpoints
-├── agents/          # LangGraph nodes and orchestration
+├── api/             # FastAPI REST endpoints (/chat, /ingest)
+├── agents/          # LangGraph nodes and state orchestration
 ├── retrieval/       # Hybrid search and vectorstore logic
 ├── services/        # Centralized LLM factory
 ├── database/        # SQLite models and session management
+├── core/            # Configuration and logging
 frontend/            # Streamlit interactive dashboard
-sample_data/         # Professional test documents
+sample_data/         # Complex markdown documents for showcase testing
 ```
 
 ---
 
-## 📋 Resume-Ready Technical Stack
+## 📋 Technical Stack
 - **AI Framework**: LangChain & LangGraph
-- **LLM Engine**: Groq (Llama 3.3) via OpenAI API
+- **LLM Engine**: Groq (Llama 3.3-70b-versatile)
 - **Vector Store**: FAISS
-- **Retrieval**: Hybrid (Dense + Sparse)
+- **Retrieval**: Hybrid (Dense + Sparse Ensemble)
+- **Embeddings**: HuggingFace (Local)
 - **API**: FastAPI
 - **Frontend**: Streamlit
 - **Package Manager**: uv
