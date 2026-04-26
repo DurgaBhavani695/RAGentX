@@ -10,6 +10,7 @@ def validate_generation(state: AgentState):
     # For testing, we'll use a flag from debug_info, or default to valid
     status = debug_info.get("validator_status", "valid")
     debug_info["validator"] = f"validated as {status}"
+    debug_info["validator_status"] = status
     
     return {
         "debug_info": debug_info

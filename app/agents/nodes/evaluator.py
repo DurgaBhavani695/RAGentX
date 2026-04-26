@@ -11,6 +11,7 @@ def evaluate_docs(state: AgentState):
     # For now, we'll use a flag from debug_info for testing, or default to relevant
     relevance = debug_info.get("evaluator_relevance", "relevant")
     debug_info["evaluator"] = f"evaluated as {relevance}"
+    debug_info["evaluator_relevance"] = relevance
     
     retry_count = state.get("retry_count", 0)
     if relevance != "relevant":
