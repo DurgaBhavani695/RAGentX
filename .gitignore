@@ -26,5 +26,3 @@ __pycache__/
 
 # Project Specific
 .python-version
-# uv.lock (Keep for apps, but ignoring here as per user request to clean up)
-# uv.lock 
