@@ -48,34 +48,39 @@ async def ingest_text(request: IngestRequest, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 @router.post("/file")
 async def ingest_file(files: List[UploadFile] = File(...), db: Session = Depends(get_db)):
-    # 1. Query AppConfig for limits
-    configs = db.query(AppConfig).all()
-    config_dict = {c.key: c.value for c in configs}
-    
-    max_file_size_mb = config_dict.get("max_file_size_mb", 5)
-    max_files_per_upload = config_dict.get("max_files_per_upload", 5)
-    max_total_files = config_dict.get("max_total_files", 10)
-    
-    # 2. Validate number of files
-    if len(files) > max_files_per_upload:
-        raise HTTPException(status_code=400, detail=f"Too many files. Max {max_files_per_upload} per upload.")
-    
-    # 3. Check total existing files
-    total_existing = db.query(DocMetadata).count()
-    if total_existing + len(files) > max_total_files:
-        raise HTTPException(status_code=400, detail=f"Total limit reached. Max {max_total_files} total files.")
-    
-    upload_dir = "data/uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    ingested_files = []
-    
-    embeddings = get_embeddings()
-    vectorstore = get_vectorstore(embeddings)
-    
     try:
+        # 1. Query AppConfig for limits
+        configs = db.query(AppConfig).all()
+        config_dict = {c.key: c.value for c in configs}
+        
+        max_file_size_mb = config_dict.get("max_file_size_mb", 5)
+        max_files_per_upload = config_dict.get("max_files_per_upload", 5)
+        max_total_files = config_dict.get("max_total_files", 10)
+        
+        # 2. Validate number of files
+        if len(files) > max_files_per_upload:
+            raise HTTPException(status_code=400, detail=f"Too many files. Max {max_files_per_upload} per upload.")
+        
+        # 3. Check total existing files
+        total_existing = db.query(DocMetadata).count()
+        if total_existing + len(files) > max_total_files:
+            raise HTTPException(status_code=400, detail=f"Total limit reached. Max {max_total_files} total files.")
+        
+        upload_dir = "data/uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        ingested_files = []
+        
+        logger.info("Initializing embeddings and vectorstore...")
+        embeddings = get_embeddings()
+        vectorstore = get_vectorstore(embeddings)
+        
         for file in files:
             # 4. Check size
             file.file.seek(0, os.SEEK_END)
@@ -87,11 +92,12 @@ async def ingest_file(files: List[UploadFile] = File(...), db: Session = Depends
             
             # 5. Save to disk
             doc_id = str(uuid.uuid4())
-            # Use doc_id in filename to avoid collisions if necessary, or just filename
-            # For simplicity, let's keep original filename if possible, but maybe unique enough
             file_path = os.path.join(upload_dir, f"{doc_id}_{file.filename}")
+            
+            logger.info(f"Saving file {file.filename} to {file_path}")
+            content = await file.read()
             with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
+                buffer.write(content)
             
             # 6. Load docs
             metadata = {
@@ -100,13 +106,13 @@ async def ingest_file(files: List[UploadFile] = File(...), db: Session = Depends
                 "file_path": file_path,
                 "file_size": file_size
             }
+            logger.info(f"Parsing file {file.filename}...")
             docs = load_file_to_documents(file_path, metadata=metadata)
             
             # 7. Add to FAISS
-            # We can pass IDs to add_documents to easily delete later
-            # However, FAISS add_documents works better if we manage IDs
-            # LangChain FAISS delete takes docstore IDs.
-            vectorstore.add_documents(docs)
+            if docs:
+                logger.info(f"Adding {len(docs)} chunks to FAISS...")
+                vectorstore.add_documents(docs)
             
             # 8. Save Metadata to DB
             db_doc = DocMetadata(
@@ -120,15 +126,18 @@ async def ingest_file(files: List[UploadFile] = File(...), db: Session = Depends
             ingested_files.append({"doc_id": doc_id, "filename": file.filename})
         
         db.commit()
+        logger.info("Saving vectorstore...")
         save_vectorstore(vectorstore)
         
         return {"status": "success", "data": ingested_files}
-    except HTTPException:
+    except HTTPException as e:
         db.rollback()
+        logger.error(f"HTTP Error during ingestion: {e.detail}")
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unexpected error during file ingestion")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @router.get("/documents")
 async def list_documents(db: Session = Depends(get_db)):
