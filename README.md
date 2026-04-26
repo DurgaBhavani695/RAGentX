@@ -65,8 +65,7 @@ graph TD
 ### 2. Initialization & Setup
 Run the automated setup script to sync dependencies and scaffold your environment:
 ```bash
-# Windows
-./setup.bat
+python setup.py
 ```
 Or manually:
 ```bash

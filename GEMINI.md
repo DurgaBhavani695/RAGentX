@@ -26,9 +26,9 @@ RAGentX is a sophisticated multi-agent system designed for high-precision retrie
 ## Building and Running
 
 ### Fast Setup (Recommended)
-The project includes a one-click initialization script for Windows:
+The project includes a one-click initialization script:
 ```bash
-./setup.bat
+python setup.py
 ```
 
 ### Integrated Execution
