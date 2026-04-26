@@ -1,13 +1,27 @@
+import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import ingest, chat, admin
 from app.database.session import engine
 from app.database.models import Base
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+logger.info("Starting RAGentX API...")
 
 # Add CORS middleware
 app.add_middleware(

@@ -138,67 +138,73 @@ with tab_docs:
     st.markdown("---")
     st.subheader("Ingested Documents")
     
-    try:
-        docs_response = http.get(f"{API_URL}/ingest/documents")
-        if docs_response.status_code == 200:
-            docs = docs_response.json()
-            if not docs:
-                st.info("No documents ingested yet.")
-            else:
-                # Create a clean display for documents
-                for doc in docs:
-                    with st.container():
-                        c1, c2, c3, c4 = st.columns([3, 2, 1, 1])
-                        c1.write(f"**{doc.get('filename') or 'Unnamed'}**")
-                        
-                        # Format date
-                        date_str = doc.get('upload_date')
-                        if date_str:
-                            try:
-                                dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-                                date_display = dt.strftime("%Y-%m-%d %H:%M")
-                            except:
-                                date_display = date_str
-                        else:
-                            date_display = "N/A"
-                        
-                        c2.write(f"📅 {date_display}")
-                        
-                        # Download button
-                        try:
-                            download_url = f"{API_URL}/ingest/documents/{doc['doc_id']}/download"
-                            # We need to fetch the content for the download button in Streamlit
-                            # Alternatively, we can use a link, but download_button is nicer.
-                            # Note: Fetching here might be slow if there are many large files.
-                            # A better way might be to only fetch on click, but st.download_button needs data upfront.
-                            # Let's use a link for simplicity if content is large, or just download it.
-                            if st.button("Download", key=f"dl_{doc['doc_id']}"):
-                                dl_res = http.get(download_url)
-                                if dl_res.status_code == 200:
-                                    st.download_button(
-                                        label="Confirm Download",
-                                        data=dl_res.content,
-                                        file_name=doc.get('filename') or "document",
-                                        key=f"confirm_dl_{doc['doc_id']}"
-                                    )
-                                else:
-                                    st.error("Download failed.")
-                        except:
-                            c3.write("Error")
+    # Use a function for document fetching with a simple retry
+    def fetch_documents():
+        try:
+            res = http.get(f"{API_URL}/ingest/documents", timeout=10)
+            if res.status_code == 200:
+                return res.json()
+        except:
+            return None
+        return None
 
-                        # Delete button
-                        if c4.button("Delete", key=f"del_{doc['doc_id']}"):
-                            try:
-                                del_res = http.delete(f"{API_URL}/ingest/documents/{doc['doc_id']}")
-                                if del_res.status_code == 200:
-                                    st.success(f"Deleted {doc.get('filename')}")
-                                    st.rerun()
-                                else:
-                                    st.error(f"Delete failed: {del_res.text}")
-                            except Exception as e:
-                                st.error(f"Error: {e}")
-                        st.divider()
+    docs = fetch_documents()
+    if docs is None:
+        st.warning("🔄 Connecting to server...")
+        time.sleep(1)
+        docs = fetch_documents()
+
+    if docs is not None:
+        if not docs:
+            st.info("No documents ingested yet.")
         else:
-            st.error("Failed to fetch documents.")
-    except Exception as e:
-        st.error(f"Connection failed: {e}")
+            # Create a clean display for documents
+            for doc in docs:
+                with st.container():
+                    c1, c2, c3, c4 = st.columns([3, 2, 1, 1])
+                    c1.write(f"**{doc.get('filename') or 'Unnamed'}**")
+                    
+                    # Format date
+                    date_str = doc.get('upload_date')
+                    if date_str:
+                        try:
+                            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                            date_display = dt.strftime("%Y-%m-%d %H:%M")
+                        except:
+                            date_display = date_str
+                    else:
+                        date_display = "N/A"
+                    
+                    c2.write(f"📅 {date_display}")
+                    
+                    # Download button
+                    download_url = f"{API_URL}/ingest/documents/{doc['doc_id']}/download"
+                    if c3.button("Download", key=f"dl_{doc['doc_id']}"):
+                        try:
+                            dl_res = http.get(download_url)
+                            if dl_res.status_code == 200:
+                                st.download_button(
+                                    label="Confirm Download",
+                                    data=dl_res.content,
+                                    file_name=doc.get('filename') or "document",
+                                    key=f"confirm_dl_{doc['doc_id']}"
+                                )
+                            else:
+                                st.error("Download failed.")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+
+                    # Delete button
+                    if c4.button("Delete", key=f"del_{doc['doc_id']}"):
+                        try:
+                            del_res = http.delete(f"{API_URL}/ingest/documents/{doc['doc_id']}")
+                            if del_res.status_code == 200:
+                                st.success(f"Deleted {doc.get('filename')}")
+                                st.rerun()
+                            else:
+                                st.error(f"Delete failed: {del_res.text}")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                    st.divider()
+    else:
+        st.error("❌ Backend server unreachable. Please check if RAGentX is running.")
