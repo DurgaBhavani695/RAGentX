@@ -85,9 +85,22 @@ DATABASE_URL=sqlite:///./ragentx.db
 FAISS_INDEX_PATH=vectorstore/faiss_index
 ```
 
-### 4. Run Everything
+### 4. Run Everything (Recommended)
 ```bash
 uv run python init_and_run.py
+```
+
+### 5. Individual Execution (Manual)
+If you prefer to run the services separately for development, use two terminals:
+
+**Terminal 1: Backend (FastAPI)**
+```bash
+uv run python -m uvicorn app.main:app --reload
+```
+
+**Terminal 2: Frontend (Streamlit)**
+```bash
+uv run streamlit run frontend/app.py
 ```
 
 ---
