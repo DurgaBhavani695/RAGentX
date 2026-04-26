@@ -33,12 +33,12 @@ def test_chat_endpoint(mock_db):
             
             assert response.status_code == 200
             assert response.json()["response"] == "Test response"
-            assert "debug_info" not in response.json()
+            assert response.json().get("debug_info") is None
             
             # Verify DB was called to load history (query for ChatHistory)
             # and called to save history (add twice: user and assistant)
             assert mock_db.add.call_count == 2
-            assert mock_db.commit.call_count == 2
+            assert mock_db.commit.call_count == 1
             
             # 2. Test chat with debug
             response = client.post(

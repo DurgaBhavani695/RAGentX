@@ -14,6 +14,7 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     session_id: str
     query: str
+    enable_web_search: bool = False
 
 class ChatResponse(BaseModel):
     response: str
@@ -40,6 +41,7 @@ async def chat(request: ChatRequest, debug: bool = Query(False), db: Session = D
             "query": request.query,
             "chat_history": chat_history,
             "retry_count": 0,
+            "use_web_search": request.enable_web_search,
             "debug_info": {}
         }
         
