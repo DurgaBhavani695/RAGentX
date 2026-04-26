@@ -1,11 +1,15 @@
+import logging
 from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
 from app.services.llm_factory import get_llm
+
+logger = logging.getLogger(__name__)
 
 def evaluate_docs(state: AgentState):
     """
     Evaluates the relevance of retrieved documents to the query.
     """
+    logger.info("Evaluating retrieved documents for relevance...")
     llm = get_llm()
 
     query = state.get("rewritten_query") or state["query"]
@@ -31,6 +35,7 @@ def evaluate_docs(state: AgentState):
     else:
         relevance = "irrelevant"
 
+    logger.info(f"Evaluation result: {relevance}")
     debug_info = state.get("debug_info", {}).copy()
     debug_info["evaluator_relevance"] = relevance
     

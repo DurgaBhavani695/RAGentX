@@ -1,11 +1,15 @@
+import logging
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from app.agents.state import AgentState
 from app.services.llm_factory import get_llm
+
+logger = logging.getLogger(__name__)
 
 def rewrite_query(state: AgentState):
     """
     Rewrites the user's query to be a standalone query based on the chat history.
     """
+    logger.info(f"Rewriting query: {state['query']}")
     llm = get_llm()
 
     prompt = ChatPromptTemplate.from_messages([
@@ -21,6 +25,7 @@ def rewrite_query(state: AgentState):
     })
     
     rewritten_query = response.content
+    logger.info(f"Query rewritten to: {rewritten_query}")
     
     # Update debug info
     debug_info = state.get("debug_info", {}).copy()

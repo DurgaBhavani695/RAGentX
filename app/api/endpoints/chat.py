@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import uuid
+import logging
 
 from app.database.session import get_db
 from app.database.models import ChatHistory
@@ -10,6 +11,7 @@ from app.agents.graph import graph
 from langchain_core.messages import HumanMessage, AIMessage
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class ChatRequest(BaseModel):
     session_id: str
@@ -24,7 +26,10 @@ class ChatResponse(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, debug: bool = Query(False), db: Session = Depends(get_db)):
     try:
+        logger.info(f"Received chat request for session: {request.session_id}")
+        
         # 1. Load chat history from DB
+        logger.info("Fetching chat history from database...")
         history_records = db.query(ChatHistory).filter(
             ChatHistory.session_id == request.session_id
         ).order_by(ChatHistory.timestamp.asc()).all()
@@ -45,9 +50,12 @@ async def chat(request: ChatRequest, debug: bool = Query(False), db: Session = D
             "debug_info": {}
         }
         
+        logger.info("Invoking agentic graph...")
         final_state = graph.invoke(initial_state)
+        logger.info("Graph invocation complete.")
 
         # 3. Save to DB
+        logger.info("Saving interaction to chat history...")
         user_msg = ChatHistory(session_id=request.session_id, role="user", content=request.query)
         ai_msg = ChatHistory(session_id=request.session_id, role="assistant", content=final_state["generation"])
         
@@ -56,6 +64,7 @@ async def chat(request: ChatRequest, debug: bool = Query(False), db: Session = D
         db.commit()
 
         # 4. Prepare response
+        logger.info("Request processed successfully.")
         return ChatResponse(
             response=final_state["generation"],
             session_id=request.session_id,
@@ -64,4 +73,5 @@ async def chat(request: ChatRequest, debug: bool = Query(False), db: Session = D
 
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception(f"Error in chat endpoint for session {request.session_id}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")

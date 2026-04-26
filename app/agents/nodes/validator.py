@@ -1,11 +1,15 @@
+import logging
 from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
 from app.services.llm_factory import get_llm
+
+logger = logging.getLogger(__name__)
 
 def validate_generation(state: AgentState):
     """
     Validates the generated answer (e.g., for hallucinations or safety).
     """
+    logger.info("Validating generated answer...")
     llm = get_llm()
 
     query = state.get("rewritten_query") or state["query"]
@@ -32,6 +36,7 @@ def validate_generation(state: AgentState):
     else:
         status = "invalid"
 
+    logger.info(f"Validation result: {status}")
     debug_info = state.get("debug_info", {}).copy()
     debug_info["validator_status"] = status
     

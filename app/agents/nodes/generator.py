@@ -1,11 +1,15 @@
+import logging
 from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
 from app.services.llm_factory import get_llm
+
+logger = logging.getLogger(__name__)
 
 def generate_answer(state: AgentState):
     """
     Generates an answer based on the retrieved documents and query.
     """
+    logger.info("Generating answer from retrieved documents...")
     llm = get_llm()
 
     retrieved_docs = state.get("retrieved_docs", [])
@@ -27,6 +31,7 @@ def generate_answer(state: AgentState):
     })
 
     response_text = response.content
+    logger.info("Answer generated successfully.")
     
     if retrieved_docs:
         response_text += "\n\nSources:"

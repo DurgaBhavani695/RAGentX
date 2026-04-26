@@ -82,8 +82,7 @@ async def ingest_file(files: List[UploadFile] = File(...), db: Session = Depends
             file.file.seek(0)
             
             if file_size > max_file_size_mb * 1024 * 1024:
-                logger.warning(f"File {file.filename} exceeds size limit: {file_size} bytes")
-                continue # Skip this file but continue with others
+                raise HTTPException(status_code=400, detail=f"File {file.filename} exceeds {max_file_size_mb}MB limit.")
             
             doc_id = str(uuid.uuid4())
             file_path = os.path.join(upload_dir, f"{doc_id}_{file.filename}")
