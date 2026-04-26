@@ -1,18 +1,12 @@
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
-from app.core.config import settings
+from app.services.llm_factory import get_llm
 
 def generate_answer(state: AgentState):
     """
     Generates an answer based on the retrieved documents and query.
     """
-    llm = ChatOpenAI(
-        base_url=settings.GROQ_API_BASE,
-        api_key=settings.GROQ_API_KEY,
-        model=settings.GROQ_MODEL_NAME,
-        temperature=0
-    )
+    llm = get_llm()
 
     retrieved_docs = state.get("retrieved_docs", [])
     query = state.get("rewritten_query") or state["query"]
@@ -21,7 +15,7 @@ def generate_answer(state: AgentState):
     context = "\n\n".join([doc.page_content for doc in retrieved_docs])
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful AI assistant. Answer the user's question using ONLY the provided context. If the answer is not in the context, say you don't know. \n\nContext:\n{context}"),
+        ("system", "You are a highly capable AI assistant. Answer the user's question using ONLY the provided context. If the answer is not contained in the context, explicitly state that you don't know based on the provided documents. Maintain a professional tone.\n\nContext:\n{context}"),
         ("human", "{query}")
     ])
 
@@ -36,10 +30,14 @@ def generate_answer(state: AgentState):
     
     if retrieved_docs:
         response_text += "\n\nSources:"
-        for i, doc in enumerate(retrieved_docs):
-            source = doc.metadata.get("filename", f"Doc {i+1}")
-            page = doc.metadata.get("page_number", "N/A")
-            response_text += f"\n- {source} (Page {page})"
+        # Use a set to avoid duplicate sources
+        sources = set()
+        for doc in retrieved_docs:
+            source_name = doc.metadata.get("filename", "Unknown")
+            page_num = doc.metadata.get("page_number", "N/A")
+            sources.add(f"- {source_name} (Page {page_num})")
+        
+        response_text += "\n" + "\n".join(sorted(list(sources)))
     
     debug_info = state.get("debug_info", {}).copy()
     debug_info["generator_status"] = "completed"

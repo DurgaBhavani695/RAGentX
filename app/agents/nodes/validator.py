@@ -1,18 +1,12 @@
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from app.agents.state import AgentState
-from app.core.config import settings
+from app.services.llm_factory import get_llm
 
 def validate_generation(state: AgentState):
     """
     Validates the generated answer (e.g., for hallucinations or safety).
     """
-    llm = ChatOpenAI(
-        base_url=settings.GROQ_API_BASE,
-        api_key=settings.GROQ_API_KEY,
-        model=settings.GROQ_MODEL_NAME,
-        temperature=0
-    )
+    llm = get_llm()
 
     query = state.get("rewritten_query") or state["query"]
     generation = state.get("generation", "")
@@ -20,8 +14,8 @@ def validate_generation(state: AgentState):
     context = "\n\n".join([doc.page_content for doc in retrieved_docs])
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a validator. Check if the AI's answer is supported by the context and doesn't contain hallucinations. Respond with exactly one word: 'valid' if it is correct, or 'invalid' if it is hallucinated or wrong. \n\nContext:\n{context}"),
-        ("human", "Question: {query}\nAnswer: {generation}")
+        ("system", "You are a strict validator. Check if the AI's answer is fully supported by the provided context and does not contain hallucinations. Respond with exactly one word: 'valid' if the answer is accurate and grounded, or 'invalid' if it is unsupported or incorrect. Do not provide any explanation."),
+        ("human", "Context:\n{context}\n\nQuestion: {query}\nProposed Answer: {generation}")
     ])
 
     chain = prompt | llm

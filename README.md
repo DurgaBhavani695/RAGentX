@@ -1,48 +1,60 @@
-# RAGentX: Agentic Retrieval-Augmented Generation System
+# RAGentX 🤖
+**The Self-Correcting Multi-Agent RAG Orchestrator**
 
-A production-ready Agentic RAG system orchestrated by **LangGraph**, utilizing **FastAPI** for the backend, **FAISS** and **BM25** for hybrid retrieval, and **Groq-hosted Llama 3** for intelligent multi-agent reasoning.
+RAGentX is a production-grade **Agentic Retrieval-Augmented Generation (RAG)** system designed to bridge the gap between static documents and actionable intelligence. Unlike standard "one-shot" RAG systems, RAGentX uses **Agentic Loops** powered by **LangGraph** to architect, retrieve, evaluate, and self-correct its own reasoning path.
 
-## 🚀 Key Features
+---
 
-- **Multi-Agent Orchestration**: A sophisticated pipeline involving specialized agents:
-  - **Rewriter**: Contextualizes user queries based on conversation history.
-  - **Retriever**: Performs hybrid search (Semantic + Keyword).
-  - **Evaluator**: Grades document relevance to ensure quality context.
-  - **Generator**: Produces high-fidelity responses with source attribution.
-  - **Validator**: Checks for hallucinations and ensures response integrity.
-- **Agentic Self-Correction**: Implements a conditional retry loop. If retrieved documents are irrelevant, the system automatically re-attempts query rewriting and retrieval (up to 3 times) before responding.
-- **Hybrid Search**: Combines **FAISS** (dense vector matching) with **BM25** (sparse keyword matching) to maximize recall and precision.
-- **Persistent Memory**: Uses **SQLAlchemy** and **SQLite** to persist chat history across sessions, enabling long-term contextual awareness.
-- **Transparent Traceability**: Built-in "Debug Mode" exposes the internal agent reasoning trace (rewritten queries, relevance scores, retry counts) for full auditability.
-- **Streamlit UI**: A modern, interactive frontend for document ingestion and real-time chat testing.
+## ✨ Key Features
 
-## 🛠️ Tech Stack
+### 🧠 Intelligent Orchestration (DAG)
+RAGentX uses a stateful **Directed Acyclic Graph (DAG)** to manage the entire retrieval lifecycle.
 
-- **Framework**: LangChain & LangGraph
-- **API**: FastAPI
-- **LLM**: Groq (Llama 3-8b-8192) via OpenAI-compatible endpoint
-- **Embeddings**: HuggingFace (all-MiniLM-L6-v2) - **Runs locally and for free!**
-- **Vector Store**: FAISS
-- **Database**: SQLite (SQLAlchemy ORM)
-- **UI**: Streamlit
+```mermaid
+graph TD
+    %% Entry Point
+    START((START)) --> Rewriter[Query Rewriter]
 
-## 📂 Project Structure
+    %% Main Pipeline
+    subgraph "Agentic Pipeline"
+        Rewriter --> Retriever[Hybrid Retriever]
+        Retriever --> Evaluator[Context Evaluator]
+    end
 
-```text
-app/
-├── api/             # FastAPI routers and endpoints
-├── agents/          # LangGraph state, graph, and node logic
-├── retrieval/       # Hybrid search and vectorstore management
-├── database/        # SQLite models and session management
-├── core/            # App configuration and logging
-frontend/            # Streamlit UI
+    %% Self-Correction Logic
+    Evaluator -->|Relevant| Generator[Response Generator]
+    Evaluator -->|"Irrelevant (Retry < 3)"| Rewriter
+    Evaluator -->|Fallback| Generator
+
+    %% Validation Gate
+    Generator --> Validator[Output Validator]
+    Validator -->|Valid| END((END))
+    Validator -->|Invalid| Generator
+
+    %% Visual Styles
+    style START fill:#0f172a,stroke:#38bdf8,color:#fff
+    style END fill:#0f172a,stroke:#38bdf8,color:#fff
+    classDef agentNode fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#fff
+    class Rewriter,Retriever,Evaluator,Generator,Validator agentNode
 ```
 
-## 🏃 Quick Start
+- **Agentic Self-Correction**: Implements a recursive "Reflexion" loop. If the agent determines the retrieved data is irrelevant, it autonomously rewrites the query and tries again.
+- **Hybrid Ensemble Retrieval**: Combines **FAISS** (dense vector search) with **BM25** (keyword search) to ensure both semantic breadth and keyword precision.
+- **Free Local Embeddings**: Optimized for performance and cost by using local **HuggingFace** models (`all-MiniLM-L6-v2`) for vectorization.
+- **High-Speed Generation**: Powered by **Groq Llama 3.3**, delivering enterprise-grade reasoning at lightning speeds.
+
+### 🛠️ Developer Experience (DX)
+- **Unified Entry Point**: Launch the full stack (FastAPI + Streamlit) with a single command: `uv run python init_and_run.py`.
+- **Transparent Traceability**: Built-in "Debug Mode" allows developers to inspect the agent's internal trace, including rewritten queries and relevance scores.
+- **Robust Persistence**: Uses **SQLAlchemy** to manage session-based chat history and document metadata.
+
+---
+
+## 🚀 Quick Start
 
 ### 1. Prerequisites
 - Python 3.10+
-- [uv](https://github.com/astral-sh/uv) (Recommended for dependency management)
+- [uv](https://github.com/astral-sh/uv) (Modern Python package manager)
 - Groq API Key
 
 ### 2. Initialization & Setup
@@ -53,29 +65,48 @@ Run the automated setup script:
 ```
 Or manually:
 ```bash
-git clone https://github.com/DurgaBhavani695/RAGentX.git
-cd RAGentX
 uv sync
 ```
 
 ### 3. Configuration
-Ensure your `.env` file in the root has the correct keys:
+Add your keys to the generated `.env` file:
+```env
+GROQ_API_KEY=your_groq_key_here
+GROQ_API_BASE=https://api.groq.com/openai/v1
+GROQ_MODEL_NAME=llama-3.3-70b-versatile
+```
+
+### 4. Run Everything
+```bash
+uv run python init_and_run.py
+```
+
+---
+
+## 📂 Project Structure
 ```text
-GROQ_API_KEY=your_groq_key
-GROQ_API_BASE=https://api.groq.com
-DATABASE_URL=sqlite:///./ragentx.db
-FAISS_INDEX_PATH=vectorstore/faiss_index
+app/
+├── api/             # FastAPI REST endpoints
+├── agents/          # LangGraph nodes and orchestration
+├── retrieval/       # Hybrid search and vectorstore logic
+├── services/        # Centralized LLM factory
+├── database/        # SQLite models and session management
+frontend/            # Streamlit interactive dashboard
+sample_data/         # Professional test documents
 ```
 
-### 4. Run the Backend (FastAPI)
-```bash
-uv run python -m uvicorn app.main:app --reload
-```
+---
 
-### 5. Run the Frontend (Streamlit)
-```bash
-uv run streamlit run frontend/app.py
-```
+## 📋 Resume-Ready Technical Stack
+- **AI Framework**: LangChain & LangGraph
+- **LLM Engine**: Groq (Llama 3.3) via OpenAI API
+- **Vector Store**: FAISS
+- **Retrieval**: Hybrid (Dense + Sparse)
+- **API**: FastAPI
+- **Frontend**: Streamlit
+- **Package Manager**: uv
+
+---
 
 ## 📄 License
 MIT
