@@ -74,7 +74,11 @@ uv sync
 ```
 
 ### 3. Configuration
-Add your keys to the generated `.env` file:
+Create a `.env` file in the root directory. You can use the provided `.env.example` as a template:
+```bash
+cp .env.example .env
+```
+Ensure your `.env` file has the following keys configured:
 ```env
 GROQ_API_KEY=your_gsk_key_here
 GROQ_MODEL_NAME=llama-3.3-70b-versatile

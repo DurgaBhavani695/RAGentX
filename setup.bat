@@ -16,10 +16,17 @@ uv sync
 
 :: 3. Setup .env if it doesn't exist
 if not exist .env (
-    echo 📝 Creating .env from template...
-    echo GROQ_API_KEY=your_groq_key_here > .env
-    echo DATABASE_URL=sqlite:///./ragentx.db >> .env
-    echo FAISS_INDEX_PATH=vectorstore/faiss_index >> .env
+    if exist .env.example (
+        echo 📝 Creating .env from .env.example...
+        copy .env.example .env >nul
+    ) else (
+        echo 📝 Creating .env from hardcoded template...
+        echo GROQ_API_KEY=your_groq_key_here > .env
+        echo GROQ_MODEL_NAME=llama-3.3-70b-versatile >> .env
+        echo DATABASE_URL=sqlite:///./ragentx.db >> .env
+        echo FAISS_INDEX_PATH=vectorstore/faiss_index >> .env
+        echo EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2 >> .env
+    )
     echo.
     echo ⚠️  Please open .env and add your GROQ_API_KEY.
 ) else (
