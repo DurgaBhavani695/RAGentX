@@ -18,7 +18,6 @@ uv sync
 if not exist .env (
     echo 📝 Creating .env from template...
     echo GROQ_API_KEY=your_groq_key_here > .env
-    echo GROQ_API_BASE=https://api.groq.com/openai/v1 >> .env
     echo DATABASE_URL=sqlite:///./ragentx.db >> .env
     echo FAISS_INDEX_PATH=vectorstore/faiss_index >> .env
     echo.

@@ -74,10 +74,9 @@ uv sync
 ```
 
 ### 3. Configuration
-Your `.env` file is automatically scaffolded by `setup.bat`. Ensure it contains:
+Add your keys to the generated `.env` file:
 ```env
 GROQ_API_KEY=your_gsk_key_here
-GROQ_API_BASE=https://api.groq.com/openai/v1
 GROQ_MODEL_NAME=llama-3.3-70b-versatile
 DATABASE_URL=sqlite:///./ragentx.db
 FAISS_INDEX_PATH=vectorstore/faiss_index
