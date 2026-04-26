@@ -123,7 +123,10 @@ with tab_docs:
             if uploaded_files:
                 with st.spinner("Uploading files..."):
                     try:
-                        files = [("files", (f.name, f.getvalue(), f.type)) for f in uploaded_files]
+                        # Reset file pointers just in case
+                        for f in uploaded_files:
+                            f.seek(0)
+                        files = [("files", (f.name, f, f.type)) for f in uploaded_files]
                         response = http.post(
                             f"{API_URL}/ingest/file",
                             files=files
