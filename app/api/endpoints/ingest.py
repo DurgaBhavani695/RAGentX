@@ -25,7 +25,8 @@ async def ingest_text(request: IngestRequest, db: Session = Depends(get_db)):
 
         # 2. Add to FAISS
         embeddings = get_embeddings()
-        vectorstore = get_vectorstore(embeddings)        vectorstore.add_documents(docs)
+        vectorstore = get_vectorstore(embeddings)
+        vectorstore.add_documents(docs)
         save_vectorstore(vectorstore)
         
         # 3. Save to DB

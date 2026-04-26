@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 from app.api.endpoints import ingest, chat
+from app.database.session import engine
+from app.database.models import Base
+
+# Create tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
