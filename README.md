@@ -105,25 +105,6 @@ uv run streamlit run frontend/app.py
 
 ---
 
-## 📸 Screenshots
-
-### 1. Document Management and Ingestion
-Upload and manage your PDF, TXT, and Markdown files with ease. The system automatically chunks and indexes them for retrieval.
-
-![Document Management](assets/screenshot3.jpeg)
-
-### 2. Multi-Agent RAG Chat Interface
-Ask questions about your documents. The agentic loop retrieves context, evaluates relevance, and generates precise answers with source attribution.
-
-![RAG Chat Interface](assets/screenshot1.jpeg)
-
-### 3. Agentic Debug Trace
-Peek under the hood to see exactly how the agent rewrote your query, evaluated context, and formulated the final answer.
-
-![Debug Trace](assets/screenshot2.jpeg)
-
----
-
 ## 📂 Project Structure
 ```text
 app/
@@ -151,5 +132,19 @@ sample_data/         # Complex markdown documents for showcase testing
 
 ---
 
-## 📄 License
-MIT
+## 📸 Screenshots
+
+### 1. Document Management and Ingestion
+Upload and manage your PDF, TXT, and Markdown files with ease. The system automatically chunks and indexes them for retrieval.
+
+![Document Management](assets/screenshot3.jpeg)
+
+### 2. Multi-Agent RAG Chat Interface
+Ask questions about your documents. The agentic loop retrieves context, evaluates relevance, and generates precise answers with source attribution.
+
+![RAG Chat Interface](assets/screenshot1.jpeg)
+
+### 3. Agentic Debug Trace
+Peek under the hood to see exactly how the agent rewrote your query, evaluated context, and formulated the final answer.
+
+![Debug Trace](assets/screenshot2.jpeg)
