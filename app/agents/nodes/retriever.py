@@ -1,7 +1,6 @@
 from app.agents.state import AgentState
 from app.retrieval.hybrid_search import create_hybrid_retriever
-from app.retrieval.vectorstore import get_vectorstore
-from langchain_openai import OpenAIEmbeddings
+from app.retrieval.vectorstore import get_vectorstore, get_embeddings
 
 def retrieve_docs(state: AgentState):
     """
@@ -9,9 +8,8 @@ def retrieve_docs(state: AgentState):
     """
     rewritten_query = state.get("rewritten_query") or state["query"]
     
-    # In a real app, you'd likely load documents from a DB or pre-indexed vectorstore
-    # For now, we'll assume the vectorstore is already populated or we load it
-    embeddings = OpenAIEmbeddings()
+    # Use free local embeddings
+    embeddings = get_embeddings()
     vectorstore = get_vectorstore(embeddings)
     
     # Since BM25 needs the list of documents, and FAISS has them indexed,

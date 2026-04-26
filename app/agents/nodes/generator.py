@@ -8,9 +8,9 @@ def generate_answer(state: AgentState):
     Generates an answer based on the retrieved documents and query.
     """
     llm = ChatOpenAI(
-        base_url="https://api.groq.com/openai/v1",
+        base_url="https://api.groq.com",
         api_key=settings.GROQ_API_KEY,
-        model="llama3-8b-8192",
+        model=settings.GROQ_MODEL_NAME,
         temperature=0
     )
 

@@ -13,3 +13,5 @@ python-dotenv
 pytest
 streamlit
 requests
+sentence-transformers
+langchain-huggingface

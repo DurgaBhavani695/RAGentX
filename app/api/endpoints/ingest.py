@@ -6,9 +6,8 @@ import uuid
 
 from app.database.session import get_db
 from app.database.models import DocMetadata
-from app.retrieval.vectorstore import get_vectorstore, save_vectorstore
+from app.retrieval.vectorstore import get_vectorstore, save_vectorstore, get_embeddings
 from app.retrieval.document_loaders import text_to_documents
-from langchain_openai import OpenAIEmbeddings
 
 router = APIRouter()
 
@@ -23,11 +22,10 @@ async def ingest_text(request: IngestRequest, db: Session = Depends(get_db)):
         doc_id = str(uuid.uuid4())
         metadata = {"doc_id": doc_id, "filename": request.filename}
         docs = text_to_documents(request.text, metadata=metadata)
-        
+
         # 2. Add to FAISS
-        embeddings = OpenAIEmbeddings()
-        vectorstore = get_vectorstore(embeddings)
-        vectorstore.add_documents(docs)
+        embeddings = get_embeddings()
+        vectorstore = get_vectorstore(embeddings)        vectorstore.add_documents(docs)
         save_vectorstore(vectorstore)
         
         # 3. Save to DB

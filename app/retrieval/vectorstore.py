@@ -1,7 +1,14 @@
 import os
 from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from app.core.config import settings
+
+def get_embeddings() -> Embeddings:
+    """
+    Returns the configured embedding model (defaults to free local HuggingFace model).
+    """
+    return HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL_NAME)
 
 def get_vectorstore(embeddings: Embeddings) -> FAISS:
     """

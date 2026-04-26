@@ -8,9 +8,9 @@ def rewrite_query(state: AgentState):
     Rewrites the user's query to be a standalone query based on the chat history.
     """
     llm = ChatOpenAI(
-        base_url="https://api.groq.com/openai/v1",
+        base_url="https://api.groq.com",
         api_key=settings.GROQ_API_KEY,
-        model="llama3-8b-8192",
+        model=settings.GROQ_MODEL_NAME,
         temperature=0
     )
 

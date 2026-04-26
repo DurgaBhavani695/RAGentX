@@ -21,6 +21,7 @@ A production-ready Agentic RAG system orchestrated by **LangGraph**, utilizing *
 - **Framework**: LangChain & LangGraph
 - **API**: FastAPI
 - **LLM**: Groq (Llama 3-8b-8192) via OpenAI-compatible endpoint
+- **Embeddings**: HuggingFace (all-MiniLM-L6-v2) - **Runs locally and for free!**
 - **Vector Store**: FAISS
 - **Database**: SQLite (SQLAlchemy ORM)
 - **UI**: Streamlit
@@ -41,20 +42,25 @@ frontend/            # Streamlit UI
 
 ### 1. Prerequisites
 - Python 3.10+
+- [uv](https://github.com/astral-sh/uv) (Recommended for dependency management)
 - Groq API Key
-- OpenAI API Key (for Embeddings)
 
-### 2. Installation
+### 2. Initialization & Setup
+Run the automated setup script:
+```bash
+# Windows
+./setup.bat
+```
+Or manually:
 ```bash
 git clone https://github.com/DurgaBhavani695/RAGentX.git
 cd RAGentX
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 3. Configuration
-Create a `.env` file in the root:
+Ensure your `.env` file in the root has the correct keys:
 ```text
-OPENAI_API_KEY=your_openai_key
 GROQ_API_KEY=your_groq_key
 DATABASE_URL=sqlite:///./ragentx.db
 FAISS_INDEX_PATH=vectorstore/faiss_index
@@ -62,12 +68,12 @@ FAISS_INDEX_PATH=vectorstore/faiss_index
 
 ### 4. Run the Backend (FastAPI)
 ```bash
-python -m uvicorn app.main:app --reload
+uv run python -m uvicorn app.main:app --reload
 ```
 
 ### 5. Run the Frontend (Streamlit)
 ```bash
-streamlit run frontend/app.py
+uv run streamlit run frontend/app.py
 ```
 
 ## 📄 License

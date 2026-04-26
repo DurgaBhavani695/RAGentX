@@ -4,12 +4,13 @@ from app.core.config import Settings
 
 def test_settings_load_defaults():
     # Mock keys to allow instantiation
-    os.environ["OPENAI_API_KEY"] = "test-key"
+    if "OPENAI_API_KEY" in os.environ:
+        del os.environ["OPENAI_API_KEY"]
     os.environ["GROQ_API_KEY"] = "test-groq-key"
     settings = Settings()
     assert settings.PROJECT_NAME == "RAGentX"
     assert settings.DATABASE_URL == "sqlite:///./ragentx.db"
-    assert settings.OPENAI_API_KEY == "test-key"
+    assert settings.OPENAI_API_KEY is None
     assert settings.GROQ_API_KEY == "test-groq-key"
     assert settings.FAISS_INDEX_PATH == "vectorstore/faiss_index"
 
